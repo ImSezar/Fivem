@@ -1,0 +1,660 @@
+Handbook Dedicated Servers - Memories of Mars
+Version 1.11
+1 Introduction
+2 Changelog
+3 Requirements
+4 Installation
+4.1 Via Steam GUI
+4.2 Via steamcmd
+5 Updating
+5.1 Database-breaking patches
+6 Configuring a server
+6.1 Overriding with Commandline Arguments
+6.2 Custom RuleSet
+6.3 Behavior
+6.4 Game Rules
+6.5 Player Rules
+6.6 Building Rules
+6.7 BuildingRank
+7 Starting the Server
+7.1 Restarts
+7.2 Windows
+7.2.1 Without automatic restarts
+7.2.2 With automatic restarts
+7.3 Linux
+7.3.1 Without automatic restarts
+7.3.2 With automatic restarts
+8 LAN servers, Firewall issues
+8.1 LAN server
+9 Connecting to a private server
+9.1 In-game browser
+9.2 Steam server browser
+9.3 Database maintenance
+10 Reporting Errors
+10.1 Windows
+10.2 Linux
+11 Admin Tools
+11.1 Player List
+11.2 Cheat List
+11.3 Items
+11.4 PDA Map
+12 Known Issues and Troubleshooting
+12.1 My friends can't see my server in the server list
+12.2 What about all those warnings/errors in the log! What am I doing wrong?
+Introduction
+The Memories of Mars Dedicated Server is available via Steam as a Dedicated Server. It can be hosted by players who do not own the game
+themselves as well as on dedicated servers which can log into Steam anonymously.
+The server is available for Windows and Linux 64 bit versions.
+Changelog
+Handbook Version Game Version Changes
+1.8 1.7.0 For Season 7 we switched our whole
+networking backend from SteamSDK to
+Photon. This should bring a much more
+reliable networking performance and
+stability, as well as less bugs and
+connection issues with private servers. Due
+to this, no port-handling is required
+anymore and port-forwarding should also
+happen automatically with Photon's NAT
+punch-through systems. All now obsolete
+parameters have been crossed out in the
+sections below.
+If for some reason port-forwarding is
+required in your setup, follow the guide
+here to find out which ports to open for
+Photon: https://doc.photonengine.com/en-u
+s/realtime/current/connection-and-authentic
+ation/tcp-and-udp-port-numbers
+As Photon does not support full LAN
+servers, we had to remove the button "Join
+LAN Server" temporarily from the Main
+Menu (it is right now not possible for us to
+detect if a local server is running. We are
+working on fixing this). You can still find
+your local servers in the server browser and
+can still run private servers for solo play as
+before.
+We also introduced a new account system,
+which does not rely on SteamIDs anymore.
+We now have our own IDs, which can be
+used to identify users. Therefore you need
+to adjust the "Admins" field in your server
+config with your new ID, to be able to use
+admin commands and cheats. You can find
+your ID in the upper right corner of the main
+menu of the game. You can also look up
+the ID of other players in the Player List of
+the admin panel.
+There was also the requirement added, that
+the number of building ranks in the
+CustomRuleset can not be changed and
+must remain at exactly 6 entries. Any other
+amount will cause the building rank
+configuration to be ignored and defaults will
+be used.
+1.9 1.7.5 Added flag "PhotonSendDirect" to
+DedicatedServerConfig. This variable might
+help with lag issues on private servers, but
+can cause random disconnects when
+connecting over the internet.
+1.10 1.7.6 Added flag
+"BuildingPreventionSphereRadius" to
+BuildingRules to adjust the radius around
+each building part in which no other
+building can be built.
+1.11 1.8.0 We observed network issues with the
+previous networking setup and have
+worked towards a new system. This brings
+back the need for potentially using the
+multihome setting and port forwarding. LAN
+servers with a private IP address are
+currently not possible, we will work on
+enabling this feature.
+Requirements
+The server currently has the following requirements:
+1.
+2.
+a.
+3.
+4.
+5.
+6.
+CPU The server should have 2 cores/hyperthreads (we made changes
+to the stock Unreal Engine 4 that allows the game server to run
+multithreaded). The higher the CPU frequency the better.
+Memory ~5 GB during normal operation
+Disk The server is around 3 GB, but this can grow depending on logs
+and the file-based database
+Internet-Connection The server needs an ongoing connection to the internet with a a
+recommended upspeed of 200kb/s for the best experience in
+online play. The ports 7777 and 15000 (configurable) need to be
+publicly available.
+Installation
+Via Steam GUI
+You can find the dedicated server in your Steam library as "Memories of Mars - Dedicated Server" in the Tools category if you own Memories
+of Mars. You can install it the same way as any other game on Steam.
+Via steamcmd
+For dedicated servers and platforms without a graphical user interface, you can use Valve's steamcmd tool to install the dedicated server.
+You don't have to own Memories of Mars to run servers using this method!
+Use the following steps to install the dedicated server via steamcmd
+Make sure you are not logged in as root on Linux. The server will not start when root rights are detected.
+Download steamcmd (see https://developer.valvesoftware.com/wiki/SteamCMD#Package_from_repositories)
+Probably easiest with something like sudo apt-get install steamcmd
+Start steamcmd by typing steamcmd
+If it is required that you login (valid until the server has been released), login using login <username>
+Unless you want to install to the default directory, choose your install directory by using force_install_dir.
+Download the server by issuing app_update 897590
+Updating
+While Memories of Mars is in Early Access, there will be quite frequent updates. The game client will always be updated to the latest version
+via Steam. Most patches during Early access will break compatibility of existing clients with the servers due to major code and content
+changes being made, therefore, the dedicated server will have to be updated in order to see servers. If you don't see your dedicated server in
+the Steam server browser or in-game, make sure it has the same version as the game client.
+If you installed your Dedicated Server via the Steam UI, just wait for the update to be applied.
+If you installed via steamcmd, use the same command again to update the server to the latest state:
+app_update 897590
+Database-breaking patches
+We are taking care that no database-breaking changes are put into the server code during a season of Memories of Mars. If, for some
+reason, we have to patch the database itself, we will announce this beforehand in patch notes.
+To make sure you are up to date with the information about the game and upcoming patches, please follow the news on the Steam page (htt
+ps://steamcommunity.com/app/644290) of the game and join our Discord (https://discord.gg/7c6rvnv).
+Configuring a server
+Your private server is configurable via the file DedicatedServerConfig.cfg that you can find in the main folder where Steam
+downloaded the private server to. The following is an example file:
+{
+ "ServerName": "My Private Server",
+ "ServerPassword": "password123",
+ "ServerID": "PS_01",
+ "MapName": "Main",
+ "MaxPlayers": 2,
+ "EnablePVP": false,
+ "EnablePVPAreas": true,
+ "EnableEAC": true,
+ "DailyRestartUTCHour": "12",
+ "Headless": false,
+ "UserWhitelist": "",
+ "UserBlacklist": "",
+ "Admins": "13374213374213370",
+ "PhotonSendDirect": false
+ }
+The available fields are:
+Name Type Example Required Comments
+ServerName String My Private Server Yes This is the server name
+that you will find the
+server under in the
+in-game Server Browser
+or in the Steam Server
+Browser.
+ServerPassword String password123 No The password for your
+server. If not specified
+(or empty string), this will
+create a non-password
+protected server.
+ServerID String MyServer1 Yes By changing this, you
+can switch between
+different versions of the
+database (see section
+on database
+management).
+MapName String Main No This must be set to
+Main, so leave the
+default.
+MaxPlayers Integer 2 No Maximal number of
+players for the server.
+Default is 64.
+EnablePVP Boolean false No If set to true, the server
+will be a full PVP server.
+If set to false, the server
+will be PVE. If not
+present, will default to
+PVP.
+EnablePVPAreas Boolean true No If set to true, this
+enables PVP areas
+around hotspots with
+active FLOPs events. If
+not present, defaults to
+having PVP areas on
+PVE servers. Has no
+effect on a PVP server.
+1.
+2.
+EnableEAC Boolean true No If enabled, the server will
+be secured with
+EasyAntiCheat. If not
+present, defaults to
+having EasyAntiCheat
+on.
+DailyRestartUTCHou r
+String 12 No This will issue two
+restarts of the server:
+The indicated hour (
+UTC+0) on the
+hour.
+The indicated hour
+(UTC+0) plus 12
+hours on the hour.
+Times are specified in
+the 24 hour system.
+Daily restarts are
+necessary for server
+stability and for
+countering floating-point
+issues.
+Headless Boolean false No If set to true, this will not
+open a window with log
+outputs. Defaults to true
+if not present.
+UserWhitelist Array of Strings "12345678910111213|1
+3121110987654321"
+No A whitelist for the server.
+If there is any entry here,
+only the Steam IDs thats
+are in this list are
+allowed to join the
+server. This way you can
+allow only a couple of
+people to join the server.
+If there are multiple
+entries here the IDs
+have to be separated by
+using "|". For finding the
+Steam ID of another
+user, please use the
+following guide: https://st
+eamcommunity.com/sha
+redfiles/filedetails/?id=20
+9000244
+Since 1.7.0 we have our
+own account system.
+You don't put Steam IDs
+into this field anymore,
+but Mars Account IDs,
+which you can find in the
+upper right corner of the
+main menu of the game.
+You can also look up the
+ID of other players in the
+Player List of the admin
+panel.
+UserBlacklist Array of Strings "12345678910111213|
+1
+3121110987654321"
+No A blacklist for the server.
+If a Steam ID is on this
+list the person will not be
+able to join the server.
+This way you can
+exclude players from
+joining. If there are
+multiple entries here the
+IDs have to be
+separated by using "|".
+Since 1.7.0 we have our
+own account system.
+You don't put Steam IDs
+into this field anymore,
+but Mars Account IDs,
+which you can find in the
+upper right corner of the
+main menu of the game.
+You can also look up the
+ID of other players in the
+Player List of the admin
+panel.
+Admins Array of Strings "12345678910111213|
+1
+3121110987654321"
+No A list of Steam IDs
+indicating which players
+have admin status on
+this server. Admins will
+be able to open a
+special UI and execute a
+selection of cheats from
+there.
+Since 1.7.0 we have our
+own account system.
+You don't put Steam IDs
+into this field anymore,
+but Mars Account IDs,
+which you can find in the
+upper right corner of the
+main menu of the game.
+You can also look up the
+ID of other players in the
+Player List of the admin
+panel.
+PhotonSendDirect Boolean false No This flag changes the
+behaviour of the server
+to send data directly to
+the clients instead of
+routing the traffic
+through the Photon
+Master Server. If
+enabled, latency is
+expected to half at the
+cost of potential
+disconnects when
+connecting over the
+internet to the server. If
+disabled, all traffic is
+routed through the
+Photon Master Server,
+which increases latency,
+but can help with
+stability.
+When playing in LAN it
+is recommended to
+enable this flag.
+Port Number 7777 No The port on which
+players connect. Make
+sure that this port is
+open in order for players
+to connect. Defaults to
+7777.
+SteamQueryPort Number 27015 No Port for Steam. Make
+sure it is open. Defaults
+to 27015.
+BeaconPort Number 15000 No This port is used to
+query data from the
+server before fully
+connecting.
+Overriding with Commandline Arguments
+The following variables can be overwritten via commandline argument. In the case of "MULTIHOME" there is no applicable variable in the
+DedicatedServerConfig, so the variable can only be set via commandline argument.
+If no commandline argument is set, the value from the config file is used.
+Name Type Usage Comments
+Port Number -port=#### (i.e. -port=7778) The port on which players
+connect. Make sure that this
+port is open in order for players
+to connect over the internet.
+Defaults to 7777.
+SteamQueryPort Number -queryport=#### (i.e.
+-queryport=27016)
+Port for Steam. Make sure it is
+open for the server to appear in
+the public server list. Defaults to
+27015.
+BeaconPort Number -beaconport=12345 The port used for beacons for
+initial connection. Make sure
+that this port is open in order for
+players to connect over the
+internet. Defaults to 15000.
+MULTIHOME String -MULTIHOME="###.###.###.#
+##" (i.e.
+-MULTIHOME=192.168.1.26)
+Overrides the IP address the
+server is running on. The server
+will use one of the available IP
+addresses but will not ascertain
+that this is a publicly reachable
+IP address. Used in Multi-IP
+environments.
+MaxPlayers Number -maxplayers=## (i.e.
+-maxplayers=12)
+Maximal number of players for
+the server. Default is 64.
+Custom RuleSet
+In our ongoing effort to give players more control over how they play Memories of Mars, we added a second configuration file next to the
+DedicatedServerConfig. It's called CustomRuleSet.cfg and contains values that will change gameplay in different ways. If the file is not
+present, it should be created automatically as soon as your server starts and will be populated with the default values of your current server
+type (PVP/PVE). Of course you can create the file manually as well. Like the DedicatedServerConfig, the CustomRuleSet defines its values
+in the Json format and should look like this:
+{
+ "GameRules":
+ {
+ "ItemSpawnRate": 1,
+ "EnableAISpawning": true,
+ "AISpawnRate": 1,
+ "AIHealthModifier": 1,
+ "AIDamageModifier": 1,
+ "EnableMeteorSpawning": true,
+ "MeteorSpawnRate": 1,
+ },
+ "PlayerRules":
+ {
+ "LogoutWeightThreshold": 1,
+ "OxygenDepletionRate": 1,
+ "NutritionDepletionRate": 1,
+ "ShowPlayerNamesRange": 10000,
+ "OnlyShowAlliancePlayerNames": true
+ },
+ "BuildingRules":
+ {
+ "EnableBuildingDamage": true,
+ "AdditionalBuildingBlocking": false,
+ "DecayTimeInHours": 48,
+ "ClaimOwnershipCostModifier": 2,
+ "BuildingRanks": [
+ {
+ "RequiredFlops": 50,
+ "MaxSupportedStructures": 25,
+ "BoundarySphereRadius": 50,
+ "ProtectionTimeInDays": 2
+ },
+ {
+ "RequiredFlops": 100,
+ "MaxSupportedStructures": 50,
+ "BoundarySphereRadius": 75,
+ "ProtectionTimeInDays": 4
+ },
+ {
+ "RequiredFlops": 500,
+ "MaxSupportedStructures": 100,
+ "BoundarySphereRadius": 100,
+ "ProtectionTimeInDays": 8
+ },
+ {
+ "RequiredFlops": 1000,
+ "MaxSupportedStructures": 250,
+ "BoundarySphereRadius": 150,
+ "ProtectionTimeInDays": 12
+ },
+ {
+ "RequiredFlops": 5000,
+ "MaxSupportedStructures": 500,
+ "BoundarySphereRadius": 200,
+ "ProtectionTimeInDays": 16
+ },
+ {
+ "RequiredFlops": 10000,
+ "MaxSupportedStructures": 1000,
+ "BoundarySphereRadius": 250,
+ "ProtectionTimeInDays": 24
+ }
+ ]
+ }
+}
+Behavior
+Depending on which kind of server you start (PVP/PVE) a different predefined RuleSet will be loaded. When starting the server this default
+RuleSet will be overridden with the values from your CustomRuleSet file. Unlike the DedicatedServerConfig, this file will update itself when
+shutting down the server, which means that changes made during runtime will persist. You can either change rules via Admin-Cheats or you
+can change the file directly during runtime. In the latter case, you need to reload the config with the cheat ReloadCustomRuleSet. You can
+also save your runtime changes manually with the cheat SaveCustomRuleSet but since the server saves them automatically on shutdown
+this is not required (could still be helpful if the server crashes). Cheats that change RuleSet values are prefixed with "SetRule_" and are
+continued with the name of the value you want to change.
+Note that loading the file while having an invalid Json syntax, won't cause any changes to the currently used ruleset, leaving the previously
+set runtime values in place. Also keep in mind that changing the server type from PVP to PVE, or vice versa, will not change any values in
+your CustomRuleSet file. You might want to change some values depending on the server type you're using. If you make a switch and just
+want the default rules in place, just remove (or rename) the CustomRuleSet file.
+Game Rules
+Name Type Description
+ItemSpawnRate Number Defines how fast loot will be considered for
+respawning. Will modify the default time of
+30 minutes in a way that higher values will
+result in a shorter timespan.
+Ranges from 0.1 to 10 which translates to 5
+hours to 3 minutes. Note that higher values
+can impact server performance.
+EnableAISpawning Boolean Allows complete enabling and disabling of
+AI spawning
+AISpawnRate Number Defines how fast AIs will be considered for
+respawning. Will modify the default time of
+30 minutes in a way that higher values will
+result in a shorter timespan.
+Ranges from 0.1 to 10 which translates to 5
+hours to 3 minutes. Note that higher values
+can impact server performance.
+AIHealthModifier Number Allows tweaking of AI health (will be
+multiplied to the AIs default HP). Ranges
+from 0.1 to 10.
+AIDamageModifier Number Allows tweaking of AI damage dealt in any
+way (will be multiplied to the AIs default
+damage). Ranges from 0.1 to 10.
+EnableMeteorSpawning Boolean Allows complete enabling and disabling of
+Meteor spawning
+MeteorSpawnRate Number Defines the interval at which Meteor
+Shower Events will take place. Higher
+means faster. Ranges from 0.1 to 10
+Player Rules
+Name Type Description
+LogoutWeightThreshold Number The percentage of your maximum weight
+capacity, at which items will be dropped
+when logging out. Ranges from 0 to 1.
+Used to prevent players from logging out
+with all the stuff stored in their base. If set
+to 0 no Items will be dropped at all.
+OxygenDepletionRate Number Defines how much oxygen is consumed
+over time (will be multiplied to the default
+value). Ranges from 0 to 2.
+A value of 0 will disable oxygen
+consumption entirely.
+NutritionDepletionRate Number Defines how much food is consumed over
+time (will be multiplied to the default value).
+Ranges from 0 to 2.
+A value of 0 will disable food consumption
+entirely.
+ShowPlayerNamesRange Number The range (in cm) in which other players
+names are visible. Ranges from 0 to 10000
+0 (1km).
+A value of 0 will disable player names
+entirely.
+OnlyShowAlliancePlayerNames Boolean Defines if only player names of alliance
+member should be shown.
+Building Rules
+Name Type Description
+EnableBuildingDamage Boolean Defines if buildings should be damagable.
+AdditionalBuildingBlocking Boolean Currently Disabled - Can be ignored. (Will
+deny placing building parts at certain
+predefined locations when it's available)
+DecayTimeInHours Number The time after which an unmaintained
+building gets removed from the server.
+ClaimOwnershipCostModifier Number The upgrade cost of the current rank
+multiplied by this number is the cost for
+claiming ownership of an unmaintained
+building.
+BuildingPreventionSphereRadius Number The size of the sphere around each
+building part that prevents other buildings
+from being built.
+BuildingRanks Array of Building Ranks Defines building rank properties. NOTE: Th
+e number of building ranks can not be
+changed. If it doesn't have exactly 6
+entries, changes will not be applied!
+InitialGracePeriodInHours Number How long the building is protected from
+other people after placing the first
+foundation.
+BuildingRank
+Name Type Description
+RequiredFlops Number The cost for upgrading to this rank.
+MaxSupportedStructures Number The number of structures that can be
+supported at this rank.
+BoundarySphereRadius Number The maximum building radius at this rank.
+ProtectionTimeInDays Number The protection duration at this rank.
+GracePeriodInHours Number The grace period duration at this rank.
+Starting the Server
+Restarts
+The Memories of Mars server needs to be restarted twice daily, this is set up with the option DailyRestartUTCHour. Before the restart, the
+server will announce that it will restart in the in-game chat. After the server has been shut down, its process will end.
+You are provided with two options for starting the game server:
+Without automatic restarting after the twice-daily shutdown
+With automatic restarting after the twice-daily shutdown
+The server will shut down regardless of which option you choose. We currently don't support disabling this automatic shutdown system. If you
+don't need to run the server for 24h a day, you can set the DailyRestartUTCHour to a time outside of your regular playtime to not have
+the server shut down during play.
+Windows
+Either use the Steam UI to start the server, or navigate to the install folder of the game. In both cases, make sure to edit the config file for
+setting up the server beforehand.
+Without automatic restarts
+You can start the server and it will run until it shuts down by starting the game
+in the Steam UI with the default start option
+directly by starting the file Game\Binaries\Win64\MemoriesOfMarsServer.exe.
+With automatic restarts
+To run the server with automatic restarts:
+in the Steam UI choose the start option Launch Game Server (restart automatically)
+Run the batch script Run Server.bat.
+Linux
+Without automatic restarts
+To start the server, start the script MemoriesOfMarsServer.sh in the installation folder of the game.
+With automatic restarts
+To start the server with automatic restarts, start the script RunServer.sh in the installation folder of the game. You might consider running
+this in the background or in a screen so it persists your login session.
+LAN servers, Firewall issues
+Port-Forwarding
+A game server needs to ports to be open on UDP and TCP. Both ports are specified in the DedicatedServerConfig.cfg and can be changed
+to whatever ports you want (as long as they are different from each other). A public server needs to have both ports open. Depending on
+your setup of the host machine (the one running the server), you may need to open the ports in a firewall and in the internet router. Look up
+your router model on this website on how to do that: https://portforward.com/
+LAN server
+With version 1.8.0 LAN servers will not work. We will work towards enabling them again.
+Connecting to a private server
+In-game browser
+Choose either ALL or PRIVATE in the filter settings of the in-game server browser and connect to your server.
+Steam server browser
+You can join a server from the Steam server browser.
+Database maintenance
+The files for the database will be stored in the following folder: Game/Saved/DB/{ServerID}/{SeasonID}.
+You can create an easy backup of your files by copying everthing inside this folder and paste it elsewhere.
+Once the game reaches a new season the database folder will create a new database inside a new season folder. The data from the
+previous season is still stored, but will not be used for the new season. The reason for that is, that we can not guarantee that the way the
+data is stored will not change between seasons. So you will start with a clean database in a new season, just like on the public servers.
+
+If you are still willing to try to save your old data somehow you can try to manually copy the data over from the previous season. This might or
+might not work, depending on the changes made. So expect your game to cause some problems afterwards. If you can't get the game to run
+anymore after this just delete all the files you put in there and make sure you have a clean database.
+NOTE: There will be no support by us for manually moving old databases to your newer server in case of database-breaking changes
+between seasons.
+Reporting Errors
+In case you encounter an error with the server, please inform us about it by using the game's support page at https://fs30.formsite.com/505g
+ames/mars/index.html
+Please attach any information that can help us track down the error. Especially server logs and crash dumps are interesting for us. This
+information can be found in:
+Windows
+The subfolder Game\Saved contains the data written by the servers. Especially the Game.log in the subfolder Game\Saved\Logs is good
+for us, as well as the contents of the latest crash report in a subfolder of Game\Saved\Crashes.
+Linux
+The subfolder Game/Saved contains the data written by the servers. Especially the Game.log in the subfolder Game\Saved\Logs is good
+for us. Additionally, the server creates a core dump, which you will find in the root folder of the game server as a file starting with core.
+Admin Tools
+Admins on a Dedicated Server are able to open an AdminTools window with F8. The key to show the window can be changed in the Input
+Settings (in case F8 doesn't work make sure it's bound there). From here you have the option to execute a selection of cheats to author your
+server.
+Player List
+The Player List shows all players that are currently connected to your server. At the bottom you have buttons to kick a selected player,
+teleport to them or teleport them to your current location.
+Cheat List
+The Cheat List contains a selection of cheats you are allowed to execute as admin. Here you can find the usual cheats like toggling
+GodMode, spawning AIs or refill your HP and survival stats. To execute a cheat select it from the list and click the Execute Button at the
+bottom.
+There's also a cheat for changing the Server Password. Note that executing this cheat will not change the password in the
+DedicatedServerConfig and therefore will only be temporary. Also changing from no password to having a password or vice versa will not be
+reflected at runtime. You would need to restart your server and change the password in your DedicatedServerConfig to accomplish that.
+Items
+The Item List contains all items sorted by category. Here you cheat items into your inventory by selecting the item and clicking the Execute
+Button at the bottom. There's also a number field where you can enter the amount of items you want to receive.
+To make it easier to find the items you desire, we added a search bar as well as the option to mark items as favourites which will then appear
+inside the Favourites category at the very top.
+PDA Map
+Admins also have the option to teleport themselves to an arbitrary location on the map. To do that, just open the map in your PDA, right-click
+on the location you want to teleport to and select the "CHEAT: Teleport here" option from the context menu.
+Known Issues and Troubleshooting
+My friends can't see my server in the server list
+Please make sure you followed all instructions above, especially the one about port forwarding and firewalls. Make sure your firewall is open
+for the two ports in the DedicatedServerConfig for both UDP and TCP and that your router is forwarding them to you as well. 90% of all
+issues with the server come down to closed ports, so check it thoroughly. Also make sure to only run one instance per server on each
+installation and port configuration. If you run two servers simultaneously on the same configuration they might interfere with each other and
+none of them might work.
+You can run multiple servers per computer, but have to do that via commandline overrides of ports. That is for advanced users only! The only
+thing necessary to run multiple servers is to download the server twice and give them different names. No need to change ports anymore!
+(1.7.0)
+What about all those warnings/errors in the log! What am I doing wrong?
+Nothing actually. Servers will throw a lot of warnings right now, but you can safely ignore them at this moment. They are not for you to fix, but
+us .
